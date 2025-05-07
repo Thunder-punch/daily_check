@@ -1,9 +1,9 @@
-import { IsString } from 'class-validator';
+import { IsInt } from 'class-validator';
 
 export class CheckOutDto {
-  @IsString()
-  name: string;
+  @IsInt()
+  userId: number;
 
-  @IsString()
-  company: string;
+  @IsInt()
+  companyId: number;
 } 

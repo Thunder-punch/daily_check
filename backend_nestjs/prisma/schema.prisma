@@ -14,32 +14,56 @@ datasource db {
 }
 
 model Company {
-  id        Int         @id @default(autoincrement())
-  name      String      @unique
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  users     User[]
+  id                Int       @id @default(autoincrement()) // companyId
+  name              String    @unique                      // companyName
+  businessNumber    String?                                 // 사업자번호 (businessNumber)
+  address           String?                                 // address
+  adminCode         String?  @unique                        // 관리자 코드 (adminCode)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  users             User[]
+  records           Record[]
+  companyCode       String?  @unique                        // companyCode (회사 코드, 중복 방지)
 }
 
 model User {
-  id        Int         @id @default(autoincrement())
-  name      String
-  companyId Int
-  company   Company     @relation(fields: [companyId], references: [id])
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  records   Record[]
+  id                Int       @id @default(autoincrement()) // userId
+  name              String                                   // name
+  email             String?  @unique                         // email
+  password          String                                   // password
+  phoneNumber       String?                                  // phoneNumber
+  role              String                                   // role (직위/직책)
+  isAdmin           Boolean   @default(false)                // isAdmin (관리자 여부)
+  isCEO             Boolean   @default(false)                // userType (대표/직원 구분)
+  companyId         Int
+  company           Company   @relation(fields: [companyId], references: [id])
+  joinStatus        String?                                  // joinStatus (가입 상태)
+  notificationSettings Json?                                 // notificationSettings (알림 설정)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  records           Record[]
+  employeeStatus    String?                                  // employeeStatus (직원 상태)
+  employeeNote      String?                                  // employeeNote (특이사항)
 }
 
 model Record {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  checkIn   DateTime
-  checkOut  DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                Int       @id @default(autoincrement())
+  userId            Int
+  user              User      @relation(fields: [userId], references: [id])
+  companyId         Int
+  company           Company   @relation(fields: [companyId], references: [id])
+  date              DateTime                                // date (날짜)
+  checkIn           DateTime?                               // checkIn (출근 시간)
+  checkOut          DateTime?                               // checkOut (퇴근 시간)
+  attendanceStatus  String                                  // attendanceStatus (출근/퇴근/결근 등 상태)
+  reason            String?                                 // reason (수정/결근/휴가 사유)
+  approvalStatus    String?                                 // approvalStatus (수정 승인 상태)
+  vacationType      String?                                 // vacationType (휴가 종류)
+  partTimeType      String?                                 // partTimeType (근무 형태)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@index([userId])
-  @@index([checkIn])
+  @@index([companyId])
+  @@index([date])
 }

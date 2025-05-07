@@ -10,22 +10,18 @@ export class AttendanceService {
 
   // 출근 기록 생성
   async checkIn(data: CheckInDto) {
-    // 회사 확인/생성
-    let company = await this.prisma.company.findUnique({ where: { name: data.company } });
-    if (!company) {
-      company = await this.prisma.company.create({ data: { name: data.company } });
-    }
-    // 사용자 확인/생성
-    let user = await this.prisma.user.findFirst({ where: { name: data.name, companyId: company.id } });
-    if (!user) {
-      user = await this.prisma.user.create({ data: { name: data.name, companyId: company.id } });
-    }
+    // 회사/사용자 확인
+    const company = await this.prisma.company.findUnique({ where: { id: data.companyId } });
+    if (!company) throw new NotFoundException('회사 정보가 없습니다.');
+    const user = await this.prisma.user.findUnique({ where: { id: data.userId } });
+    if (!user) throw new NotFoundException('사용자 정보가 없습니다.');
     // 오늘 출근 기록 있는지 확인
     const today = new Date();
     const record = await this.prisma.record.findFirst({
       where: {
         userId: user.id,
-        checkIn: {
+        companyId: company.id,
+        date: {
           gte: startOfDay(today),
           lte: endOfDay(today),
         },
@@ -38,24 +34,28 @@ export class AttendanceService {
     return this.prisma.record.create({
       data: {
         userId: user.id,
+        companyId: company.id,
+        date: today,
         checkIn: today,
+        attendanceStatus: '출근',
       },
     });
   }
 
   // 퇴근 기록 생성
   async checkOut(data: CheckOutDto) {
-    // 회사/사용자 찾기
-    const company = await this.prisma.company.findUnique({ where: { name: data.company } });
+    // 회사/사용자 확인
+    const company = await this.prisma.company.findUnique({ where: { id: data.companyId } });
     if (!company) throw new NotFoundException('회사 정보가 없습니다.');
-    const user = await this.prisma.user.findFirst({ where: { name: data.name, companyId: company.id } });
+    const user = await this.prisma.user.findUnique({ where: { id: data.userId } });
     if (!user) throw new NotFoundException('사용자 정보가 없습니다.');
     // 오늘 출근 기록 찾기
     const today = new Date();
     const record = await this.prisma.record.findFirst({
       where: {
         userId: user.id,
-        checkIn: {
+        companyId: company.id,
+        date: {
           gte: startOfDay(today),
           lte: endOfDay(today),
         },
@@ -68,7 +68,7 @@ export class AttendanceService {
     // 퇴근 시간 업데이트
     return this.prisma.record.update({
       where: { id: record.id },
-      data: { checkOut: today },
+      data: { checkOut: today, attendanceStatus: '퇴근' },
     });
   }
 
@@ -77,7 +77,7 @@ export class AttendanceService {
     const target = new Date(date);
     const records = await this.prisma.record.findMany({
       where: {
-        checkIn: {
+        date: {
           gte: startOfDay(target),
           lte: endOfDay(target),
         },
