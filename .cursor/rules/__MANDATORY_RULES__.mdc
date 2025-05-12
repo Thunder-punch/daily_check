@@ -1,0 +1,66 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: 출근퇴근 기록 시스템의 기술 스택과 구조에 대한 규칙
+autoAttach:
+  - ./
+---
+
+본 폴더는 내가 개발 중인 출근퇴근 기록 시스템의 전체 기술 스택과 구조야.  
+이 정보를 바탕으로 적절한 코드 구조, API 설계, DB 모델링, 그리고 프론트-백 연동에 대해 지원해줘.
+
+[목표]
+- 여러 기업이 함께 사용하는 기업용 출석 체크 웹앱 구축
+- 하루 약 2000명 규모의 출근/퇴근 데이터 기록 및 조회
+- 출석자: 이름, 회사명, 출/퇴근 시간 입력
+- 관리자 페이지: 날짜별 출석 조회, 엑셀 다운로드 등
+
+[전체 아키텍처]
+- 프론트엔드: Vercel (Next.js)
+- 백엔드: Render (NestJS)
+- 데이터베이스: PostgreSQL (Docker, 자체 서버)
+- 메시지 큐: Redis (BullMQ)
+- 배포: 프론트는 Vercel, 백엔드는 Render 사용 예정(개발 초기에는 배포하지 않고 로컬 환경에서 테스트 후 배포 예정)
+
+[아키텍처 도식화]
+[ 사용자 브라우저 ]
+      ↓
+[ Vercel - Next.js 프론트엔드 ]
+      ↓
+[ Render - NestJS 백엔드 ]
+      ↓
+[ Redis (메시지 큐, BullMQ) ]
+      ↓
+[ 워커 프로세스 (백엔드에 내장 or 별도 실행) ]
+      ↓
+[ PostgreSQL (도커, 자체 서버) ]
+
+[백엔드 설계 방향]
+- REST API 방식
+- 주요 라우트: POST /attendance/checkin, POST /attendance/checkout, GET /attendance/:date
+- Prisma로 DB 연동 및 마이그레이션 관리
+- 데이터 유실을 방지하기 위해 메시지 큐 시스템 (Redis + BullMQ) 적용
+
+[프론트엔드 설계 방향]
+- 출석 입력 페이지: 이름/회사명 입력 → 체크인/체크아웃 버튼
+- 관리자 페이지: 출석 리스트 확인, 검색/필터 기능
+- API 연동은 fetch 혹은 Axios 사용
+
+[기타]
+- 트래픽 집중 시간대(오전 8~9시, 오후5시30분~6시30분) 부하 대비 설계 필요
+- 추후 Redis 캐싱 및 요청 제한(throttling) 고려 중
+- 인증: 카카오 인증 + JWT
+
+[폴더 구조]
+- /backend_nestjs : NestJS 기반 백엔드 서버
+- /frontend_nextjs : Next.js 기반 프론트엔드
+- /docs : 프로젝트 문서
+- /prisma : DB 스키마 및 마이그레이션
+- /scripts : 데이터 생성/관리 스크립트
+
+※ Prisma 폴더는 반드시 백엔드 폴더(backend_nestjs) 내부에만 생성하며, 루트에는 생성하지 않는다.
+
+이 구조를 기준으로 코드 작성이나 폴더 구조, 로직 개선 등에 조언해줘.

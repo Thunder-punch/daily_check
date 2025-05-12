@@ -84,12 +84,31 @@
 3. 관리자는 웹에서 출석 데이터 조회/다운로드
 4. 프론트엔드 → 백엔드 → DB에서 데이터 조회 및 엑셀 변환
 
+## 전체 시스템 구조(아키텍처)
+
+```
+[ 사용자 브라우저 ]
+      ↓
+[ Vercel - Next.js 프론트엔드 ]
+      ↓
+[ Render - NestJS 백엔드 ]
+      ↓
+[ Redis (메시지 큐, BullMQ) ]
+      ↓
+[ 워커 프로세스 (백엔드에 내장 or 별도 실행) ]
+      ↓
+[ PostgreSQL (도커, 자체 서버) ]
+```
+
 ## 기술 스택
-- Frontend: Next.js (App Router) + ShadCN + TailwindCSS
-- Backend: NestJS + Prisma
-- Database: PostgreSQL (Docker 컨테이너로 실행, 포트 5432)
+- 프론트엔드: Vercel (Next.js)
+- 백엔드: Render (NestJS)
+- 데이터베이스: PostgreSQL (Docker, 자체 서버)
+- 메시지 큐: Redis (BullMQ)
 - 배포: 프론트는 Vercel, 백엔드는 Render 사용 예정
-- 인증: 초기에는 인증 없이 출석만 기록, 이후 JWT 기반 관리자 인증 도입 예정
+
+## 인증 방식
+- 카카오 인증 + JWT
 
 ## 데이터 흐름도
 
@@ -199,31 +218,10 @@ npm install
 npm run start:dev
 ```
 
-### 데이터베이스 (PostgreSQL)
-```bash
-docker run --name postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres
-```
+## 폴더 구조
 
-## 배포 계획
-1. 개발 초기에는 로컬 환경에서 테스트
-2. 프론트엔드는 Vercel에 배포
-3. 백엔드는 Render에 배포
-4. 데이터베이스는 Supabase 또는 Render Postgres로 전환 예정
-
-## 미정/논의 필요 사항
-- 사용자 인증 방식 (예: 이메일, 사번, 사내 계정 등)
-- 관리자 권한 부여 기준
-- 출근/퇴근 시간 수정 정책
-- 데이터 보관 기간 및 보안 정책
-- 알림/푸시 기능 여부
-
-## Record 테이블 컬럼 설명
-
-| 컬럼명    | 설명                                                                 |
-|-----------|---------------------------------------------------------------------|
-| id        | 출퇴근 기록의 고유 식별자(Primary Key). 각 기록마다 자동으로 증가하는 번호입니다. |
-| userId    | 출퇴근 기록을 남긴 사용자의 고유 ID. User 테이블의 id와 연결(외래키)됩니다. |
-| checkIn   | 출근 시간. 사용자가 출근 버튼을 눌렀을 때 기록되는 날짜와 시간입니다. |
-| checkOut  | 퇴근 시간. 사용자가 퇴근 버튼을 눌렀을 때 기록되는 날짜와 시간입니다. |
-| createdAt | 이 출퇴근 기록이 처음 생성된 날짜와 시간입니다. (출근 기록 생성 시 자동 입력) |
-| updatedAt | 이 출퇴근 기록이 마지막으로 수정된 날짜와 시간입니다. (퇴근 시 자동 갱신) | 
+- /backend_nestjs : NestJS 기반 백엔드 서버
+- /frontend_nextjs : Next.js 기반 프론트엔드
+- /docs : 프로젝트 문서
+- /prisma : DB 스키마 및 마이그레이션
+- /scripts : 데이터 생성/관리 스크립트
